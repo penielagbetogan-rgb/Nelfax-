@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  nelfax-ai-prod:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: nelfax-ai:production
+    container_name: nelfax_ai_server
+    restart: always
+    ports:
+      - "3000:3000"
+      - "8000:8000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - RUNPOD_URL=${RUNPOD_URL:-}
+      - RUNPOD_ENDPOINT_URL=${RUNPOD_ENDPOINT_URL:-}
+      - RUNPOD_API_KEY=${RUNPOD_API_KEY:-}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+    volumes:
+      - ./outputs:/app/outputs
+      - ./weights:/app/weights
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]

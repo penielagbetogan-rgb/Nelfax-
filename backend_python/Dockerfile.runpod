@@ -1,0 +1,33 @@
+# NELFAX AI - RunPod Serverless & GPU Pod Container Specification (MLOps Optimized)
+FROM runpod/pytorch:2.2.0-py3.10-cuda12.1.1-devel-ubuntu22.04
+
+# Enforce memory allocation optimization for PyTorch CUDA
+ENV PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:512
+ENV MODEL_WEIGHTS_DIR=/app/weights
+ENV PYTHONUNBUFFERED=1
+
+WORKDIR /app
+
+# Create high-speed volume directory for model weights caching
+RUN mkdir -p /app/weights
+
+# System dependencies for OpenCV and image manipulation
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libgl1-mesa-glx \
+    libglib2.0-0 \
+    curl \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python requirements
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application source code
+COPY . /app
+
+# Expose FastAPI port when running as standalone pod or dev server
+EXPOSE 8000
+
+# Default command launches RunPod Serverless worker handler
+CMD ["python3", "-u", "runpod_handler.py"]
